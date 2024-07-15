@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
 from pydantic import UUID4
 from store.core.exceptions import NotFoundException
 
@@ -13,6 +13,7 @@ router = APIRouter(tags=["products"])
 async def post(
     body: ProductIn = Body(...), usecase: ProductUsecase = Depends()
 ) -> ProductOut:
+    # TODO: Mapear uma exceção, caso dê algum erro de inserção e capturar na controller
     return await usecase.create(body=body)
 
 
@@ -31,12 +32,24 @@ async def query(usecase: ProductUsecase = Depends()) -> List[ProductOut]:
     return await usecase.query()
 
 
+# TODO: aplique um filtro de preço, assim: (price > 5000 and price < 8000)
+@router.get(path="/search/", status_code=status.HTTP_200_OK)
+async def search(
+    price: int = Query(gt=0, alias="price"), usecase: ProductUsecase = Depends()
+) -> List[ProductOut]:
+    return await usecase.search(price=price)
+
+
 @router.patch(path="/{id}", status_code=status.HTTP_200_OK)
 async def patch(
     id: UUID4 = Path(alias="id"),
     body: ProductUpdate = Body(...),
     usecase: ProductUsecase = Depends(),
 ) -> ProductUpdateOut:
+    # TODO: retornar uma exceção de Not Found, quando o dado não for encontrado
+    # retornar mensagem amigável pro usuário
+    # TODO: ao alterar um dado, a data de updated_at deve corresponder ao time atual,
+    # permitir modificar updated_at também
     return await usecase.update(id=id, body=body)
 
 
