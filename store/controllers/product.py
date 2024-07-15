@@ -46,11 +46,10 @@ async def patch(
     body: ProductUpdate = Body(...),
     usecase: ProductUsecase = Depends(),
 ) -> ProductUpdateOut:
-    # TODO: retornar uma exceção de Not Found, quando o dado não for encontrado
-    # retornar mensagem amigável pro usuário
-    # TODO: ao alterar um dado, a data de updated_at deve corresponder ao time atual,
-    # permitir modificar updated_at também
-    return await usecase.update(id=id, body=body)
+    try:
+        return await usecase.update(id=id, body=body)
+    except NotFoundException as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.message)
 
 
 @router.delete(path="/{id}", status_code=status.HTTP_204_NO_CONTENT)
